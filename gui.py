@@ -1,20 +1,64 @@
 import tkMessageBox
+import face_detection as fd
+import cv2
 from tkinter import *
 from PIL import ImageTk, Image
 import os
-
 root = Tk()
+root.title("Attendence Management System")
 root.geometry("700x600")
 root.config(background="#ffffff")
 logo = ImageTk.PhotoImage(Image.open("Resources/logo_icon.png"))
 logo_img = Label(root, image = logo,background="#ffffff")
-
+#recognizer=cv2.face_BPHFaceRecognizer.create()
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt2.xml')
 #Function goes here
+def new_register(name,id):
+   print("Hello")
+   print(name.get())
+
+def take_face(img):
+    face=face_cascade.detectMultiScale(img, scaleFactor=1.5, minNeighbors=5)
+    if face is ():
+        return None
+    else:
+        return face
 
 def take_attendence():
     tkMessageBox.showinfo("Take Attendence", "This function is not available now")
 def check_attendence():
     tkMessageBox.showinfo("Take Attendence", "This function is not available now")
+
+
+def register_face():
+    cap=cv2.VideoCapture(0)
+    counter=0
+    while(True):
+        ret,frame=cap.read()
+        gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        face=take_face(gray)
+        if face is not None:
+            for (x,y,w,h) in face:
+                color = (255, 0, 0)
+                stroke = 2
+                x2 = x + w
+                y2 = y + h
+                cv2.rectangle(frame, (x, y), (x2, y2), color, stroke)
+                rest=50-counter;
+                if rest==1:
+                    cv2.putText(frame, "Finished", (100, 100), cv2.FONT_HERSHEY_COMPLEX, 2, 255)
+                else:
+                    cv2.putText(frame,str(rest),(100,100),cv2.FONT_HERSHEY_COMPLEX,2,255)
+                cv2.imshow("frame",frame)
+                crop=gray[y:y+h,x:x+w]
+                cv2.imwrite("face-data/"+str(counter)+".jpg",crop)
+                counter+=1
+            if cv2.waitKey(20) & 0xFFF ==ord('q'):
+                break
+            if counter==50:
+                break
+
+
 def register_user():
     ##NEW SEPERATE WINDOW FOR NEW USER REGISTRATION
     register=Tk()
@@ -31,15 +75,17 @@ def register_user():
                              height="2",
                              background="#000000",
                              foreground="#ffffff",
-                             activeforeground="#ff0000"
-                             )
+                             activeforeground="#ff0000",
+                            command=register_face
+                              )
     complete_registration = Button(register,
                        text="Register",
                        width="30",
                        height="2",
                        background="#000000",
                        foreground="#ffffff",
-                       activeforeground="#ff0000"
+                       activeforeground="#ff0000",
+                       command=new_register(name_input, id_input)
                        )
     id_label.pack(pady=(30,0))
     id_input.pack()
@@ -94,7 +140,6 @@ exit_btn=Button(root,
                 activeforeground="#ff0000",
                 command=exit_app
                 )
-
 logo_img.pack(pady="30")
 heading.pack(pady=(0,30))
 take_attendence.pack(pady=(0,30))
